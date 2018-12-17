@@ -1,0 +1,116 @@
+﻿@model ShoppingCartViewModel
+@{
+    ViewBag.Title = "Shopping Cart";
+}
+<div class="container">
+    <h3>
+        Review your cart:
+    </h3>
+    <p class="button">
+        @{
+            var disabled = "";
+            if (Model.CartItems == null || Model.CartItems.Count == 0)
+            {
+                disabled = "disabled";
+            }
+        }
+        <a class="btn btn-primary @disabled" id="checkoutbtn" asp-controller="Checkout" asp-action="AddressAndPayment">Checkout</a>
+    </p>
+    <div id="removebooksuccess" class="alert alert-success" role="alert" hidden>Book successfully removed from cart</div>
+    <div id="updatebooksuccess" class="alert alert-success" role="alert" hidden>Book quantity successfully updated</div>
+    <div class="col-md-12">
+        <table class="table">
+            <tr>
+                <th>
+                    Title
+                </th>
+                <th>
+                    Price
+                </th>
+                <th>
+                    Quantity
+                </th>
+                <th></th>
+            </tr>
+            @foreach (var item in Model.CartItems)
+            {
+                <tr id="row-@item.RecordId">
+                    <td>
+                        @Html.ActionLink(item.Book.Title, "Details", "BookStore", new { id = item.BookId }, null)
+                    </td>
+                    <td>
+                        @item.Book.Price.ToString("N2")
+                    </td>
+                    <td>
+                        <form class="formUpdateBook">
+                            <span>
+                                <input type="number" id="quantity-@item.RecordId" value="@item.Count" min="1" required />
+                                <button data-id="@item.RecordId" class="btn updatequantity">Update</button>
+                            </span>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="#" class="removefromcart btn btn-primary"
+                           data-id="@item.RecordId">
+                            Remove
+                            from cart
+                        </a>
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td>
+                    Total
+                </td>
+                <td></td>
+                <td></td>
+                <td id="cart-total">
+                    @Model.CartTotal.ToString("N2")
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+@section scripts
+    {
+    <script>
+        $(document).ready(function () {
+            $('.bookform').submit(false);
+            $('.formUpdateBook').submit(false);
+            
+            $(".removefromcart").click(function () {
+                var recordToDelete = $(this).attr("data-id");
+                if (recordToDelete != '') {
+                    console.log(recordToDelete);
+                    $.post("/ShoppingCart/RemoveFromCart", { "id": recordToDelete },
+                        function (data) {
+                            $('#row-' + data.deleteId).fadeOut('slow');
+                            $('#cart-total').text(data.cartTotal);
+                            $('#removebooksuccess').fadeIn('slow').delay(1000).fadeOut('slow');
+                            $('#cart-status').text('Cart (' + data.cartCount + ')');
+                            if (data.cartCount == 0) {
+                                $("#checkoutbtn").addClass("disabled");
+                            }
+                        });
+                }
+            });
+
+            $(".updatequantity").click(function () {
+                var recordToUpdateId = $(this).attr("data-id");
+                console.log("aaa" + recordToUpdateId);
+                if (recordToUpdateId != '') {
+                    if ($('.formUpdateBook').validate()) {
+                        var quantity = $("#quantity-" + recordToUpdateId).val();
+                        console.log(quantity);
+                        $.post("/ShoppingCart/UpdateCartQuantity/" + recordToUpdateId + "?quantity=" + quantity,
+                            function (data) {
+                                $('#updatebooksuccess').fadeIn('slow').delay(1000).fadeOut('slow');
+                                $("#quantity-" + recordToUpdateId).val(data.quantity);
+                                $('#cart-total').text(data.total);
+                            });
+                    }
+                }
+            });
+        });
+    </script>
+}

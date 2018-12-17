@@ -1,0 +1,27 @@
+﻿@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<IdentityUser> signInManager
+@inject UserManager<IdentityUser> userManager
+
+@if (signInManager.IsSignedIn(User))
+{
+    var currentUser = await userManager.GetUserAsync(User);
+
+    var isAdmin = currentUser != null
+        && await userManager.IsInRoleAsync(
+            currentUser,
+            "Administrator");
+
+    if (isAdmin)
+    {
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a asp-controller="Home"
+                   asp-area="Admin"
+                   asp-action="Index">
+                    Admin Dashboard
+                </a>
+            </li>
+        </ul>
+    }
+}

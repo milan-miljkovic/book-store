@@ -1,0 +1,63 @@
+﻿@model BookStore.ViewModels.BookViewModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+
+<div>
+    <h4>@Model.Title</h4>
+    <div id="addbooksuccess" class="alert alert-success" role="alert" hidden>Book successfully added to cart</div>
+    <hr />
+    <form id="formaddbook">
+        <dl class="dl-horizontal">
+            <dd>
+                <img class="img-responsive" src="https://static01.nyt.com/images/2018/09/13/arts/13bookanderson1/11bookanderson1-facebookJumbo.jpg" alt="@Model.Title" />
+            </dd>
+            <dt>
+                @Html.DisplayNameFor(model => model.Author)
+            </dt>
+            <dd>
+                @Html.DisplayFor(model => model.Author)
+            </dd>
+            <dt>
+                @Html.DisplayNameFor(model => model.Description)
+            </dt>
+            <dd>
+                @Html.DisplayFor(model => model.Description)
+            </dd>
+            <dt>
+                @Html.DisplayNameFor(model => model.Price)
+            </dt>
+            <dd>
+                @Html.DisplayFor(model => model.Price)
+            </dd>
+            <dd>
+                <span>
+                    <input type="number" id="quantity-@Model.BookId" min="1" value="1" required />
+                    <button data-id="@Model.BookId" class="btn btn-primary addtocart">Add to cart</button>
+                </span>
+            </dd>
+        </dl>
+    </form>
+</div>
+@section scripts
+    {
+    <script>
+        $(document).ready(function () {
+            $('#formaddbook').submit(false);
+            $(".addtocart").click(function () {
+                var bookToAddId = $(this).attr("data-id");
+                if (bookToAddId != '') {
+                    if ($('#formaddbook').validate()) {
+                        var quantity = $("#quantity-" + bookToAddId).val();
+                        $.post("/ShoppingCart/AddToCart/" + bookToAddId + "?quantity=" + quantity,
+                            function (data) {
+                                $('#addbooksuccess').fadeIn('slow').delay(1000).fadeOut('slow');
+                            });
+                    }
+                }
+            });
+        });
+    </script>
+}

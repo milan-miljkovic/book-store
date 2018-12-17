@@ -1,0 +1,105 @@
+﻿@model BrowseViewModel
+@{
+    ViewData["Title"] = "Browse";
+}
+
+<div class="container-fluid">
+    <div class="row ">
+        <div class="col-md-3">
+            @await Component.InvokeAsync("Categories", new { categoryId = Model.Category.CategoryId })
+        </div>
+        <div class="col-md-9">
+            <h2>Category @Model.Category.Name</h2>
+            <div id="addbooksuccess" class="alert alert-success" role="alert" hidden>Book successfully added to cart</div>
+            @if (Model.Books != null && Model.Books.Count > 0)
+            {
+                for (int i = 0; i < Model.Books.Count; ++i)
+                {
+                    var firstBook = Model.Books[i];
+                    <div class="row">
+                        <form id="bookform-@firstBook.BookId" class="bookform">
+                            <div class="col-md-6">
+                                <div class="jumbotron text-center">
+                                    <a href="/BookStore/Details/@firstBook.BookId">
+                                        <img class="img-responsive book-image" src="@firstBook.ImageUrl" alt="@firstBook.Title" />
+                                    </a>
+                                    <a href="/BookStore/Details/@firstBook.BookId"><h3>@firstBook.Title</h3></a>
+                                    <h4>@firstBook.Author</h4>
+                                    <p>@firstBook.Description</p>
+                                    <p class="font-weight-bold">@firstBook.Price.ToString("N2")</p>
+                                    <span>
+                                        <input type="number" id="quantity-@firstBook.BookId" min="1" value="1" required />
+                                        <button data-id="@firstBook.BookId" class="btn btn-primary addtocart">Add to cart</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                        @if ((i + 1) < Model.Books.Count)
+                        {
+                            var secondBook = Model.Books[i + 1];
+                            <form id="bookform-@secondBook.BookId" class="bookform">
+                                <div class="col-md-6">
+                                    <div class="jumbotron text-center">
+                                        <a href="/BookStore/Details/@secondBook.BookId">
+                                            <img class="img-responsive book-image" src="@secondBook.ImageUrl" alt="@secondBook.Title" />
+                                        </a>
+                                        <a href="/BookStore/Details/@secondBook.BookId"><h3>@secondBook.Title</h3></a>
+                                        <h4>@secondBook.Author</h4>
+                                        <p>@secondBook.Description</p>
+                                        <p class="font-weight-bold">@secondBook.Price.ToString("N2")</p>
+                                        <span>
+                                            <input type="number" id="quantity-@secondBook.BookId" min="1" value="1" required />
+                                            <button data-id="@secondBook.BookId" class="btn btn-primary addtocart">Add to cart</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+                            ++i;
+                        }
+                    </div>
+                }
+                <nav aria-label="Pagination">
+                    <ul class="pagination">
+                        @if (Model.Page - 1 > 0)
+                        {
+                            int previousPage = Model.Page - 1;
+                            <li class="page-item"><a class="page-link" href="/BookStore/Browse/@Model.Category.CategoryId?page=@previousPage">Previous</a></li>
+                        }
+                        <li class="page-item"><a class="page-link" href="#">@Model.Page</a></li>
+                        @if (Model.Page + 1 <= Model.TotalPages)
+                        {
+                            int nextPage = Model.Page + 1;
+                            <li class="page-item"><a class="page-link" href="/BookStore/Browse/@Model.Category.CategoryId?page=@nextPage">Next</a></li>
+                        }
+                    </ul>
+                </nav>
+            }
+            else
+            {
+                <div>No books found</div>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts
+    {
+    <script>
+        $(document).ready(function () {
+            $('.bookform').submit(false);
+            $(".addtocart").click(function () {
+                var bookToAddId = $(this).attr("data-id");
+                if (bookToAddId != '') {
+                    if ($('#bookform-' + bookToAddId).validate()) {
+                        var quantity = $("#quantity-" + bookToAddId).val();
+                        $.post("/ShoppingCart/AddToCart/" + bookToAddId + "?quantity=" + quantity,
+                            function (data) {
+                                $('#addbooksuccess').fadeIn('slow').delay(1000).fadeOut('slow');
+                            });
+                    }
+                }
+            });
+        });
+    </script>
+}
+
